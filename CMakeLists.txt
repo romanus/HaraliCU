@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.8 FATAL_ERROR)
-project (HaralickCU C CXX CUDA)
+project (HaralickCU CXX CUDA)
 
 set(OpenCV_STATIC ON)
 find_package(OpenCV REQUIRED PATHS "${CMAKE_SOURCE_DIR}/3rd_party/opencv" NO_DEFAULT_PATH)
@@ -8,7 +8,7 @@ if(OpenCV_FOUND)
 endif()
 
 add_executable (GPUDemo
-    GPU/src/getopt.c
+    GPU/src/getopt.cpp
     GPU/src/AggregatedGrayPair.cu
     GPU/src/Direction.cu
     GPU/src/Features.cu
@@ -25,13 +25,10 @@ add_executable (GPUDemo
     GPU/src/ImageData.cu
     GPU/src/Window.cu
     GPU/src/WorkArea.cu
-    GPU/src/Main.cpp
+    GPU/src/main.cpp
 )
 
-target_include_directories (GPUDemo
-    PUBLIC
-        GPU/src
-)
+target_include_directories (GPUDemo PUBLIC GPU/src)
 
 set_target_properties(GPUDemo PROPERTIES CXX_STANDARD 17)
 set(CMAKE_CONFIGURATION_TYPES "Release;" CACHE STRING "" FORCE)
