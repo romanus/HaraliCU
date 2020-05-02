@@ -200,10 +200,10 @@ dim3 getGridFromAvailableMemory(int numberOfPairs,
 
 	cout << endl << "WARNING! Maximum available gpu memory consumed" << endl;
 	// How many blocks can be launched
-	int numberOfBlocks = freeGpuMemory / singleBlockMemoryOccupation;
-	
+	const auto numberOfBlocks = freeGpuMemory / singleBlockMemoryOccupation;
+
 	// Creating a 2D grid of blocks
-	int gridSide = sqrt(numberOfBlocks);
+	int gridSide = static_cast<int>(std::sqrt(numberOfBlocks));
 	return dim3(gridSide, gridSide);
 }
 

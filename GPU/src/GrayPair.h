@@ -13,8 +13,8 @@
 
 // Custom types for code reusability
 // Unsigned shorts halve the memory footprint of the application
-typedef short unsigned grayLevelType;
-typedef short unsigned frequencyType;
+typedef unsigned short grayLevelType;
+typedef unsigned short frequencyType;
 
 /**
  * This class represents the gray levels of a pixel pair

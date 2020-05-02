@@ -14,9 +14,9 @@ ImageFeatureComputer::ImageFeatureComputer(const ProgramArguments& progArg)
  * @param imgData
  * @param padding
  */
-void ImageFeatureComputer::printInfo(const ImageData imgData, int border)
+void ImageFeatureComputer::printInfo(const ImageData imgData, int border, const std::string& filePath)
 {
-	cout << endl << "- Input image: " << progArg.imagePath;
+	cout << endl << "- Input image: " << filePath;
 	cout << endl << "- Output folder: " << progArg.outputFolder;
 	int rows = imgData.getRows() - 2 * getAppliedBorders();
 	int cols = imgData.getColumns() - 2 * getAppliedBorders();
@@ -56,10 +56,10 @@ void ImageFeatureComputer::printExtimatedSizes(const ImageData& img){
  * @param img
  */
 void checkOptionCompatibility(ProgramArguments& progArg, const Image img){
-    int imageSmallestSide = img.getRows();
+    auto imageSmallestSide = img.getRows();
     if(img.getColumns() < imageSmallestSide)
         imageSmallestSide = img.getColumns();
-    if(progArg.windowSize > imageSmallestSide){
+    if(static_cast<unsigned int>(progArg.windowSize) > imageSmallestSide){
         cout << "WARNING! The window side specified with the option -w"
                 "exceeds the smallest dimension (" << imageSmallestSide << ") of the image read!" << endl;
         cout << "Window side is corrected to (" << imageSmallestSide << ")" << endl;
@@ -83,52 +83,55 @@ int ImageFeatureComputer::getAppliedBorders(){
  * This method reads the image, computes the features, re-arranges the
  * results, and saves them in the file system
  */
-void ImageFeatureComputer::compute(){
-	bool verbose = progArg.verbose;
+void ImageFeatureComputer::compute()
+{
+	const auto verbose = progArg.verbose;
 
-	// Image from imageLoader
-	Image image = ImageLoader::readImage(progArg.imagePath, progArg.borderType,
-                                         getAppliedBorders(), progArg.quantize,
-                                         progArg.quantizationMax);
-	ImageData imgData(image, getAppliedBorders());
-	if(verbose)
-    	cout << "* Image loaded * ";
-    checkOptionCompatibility(progArg, image);
-    // Print computation info to cout
-	printInfo(imgData, progArg.distance);
-	if(verbose) {
-		// Additional info on memory occupation
-		printExtimatedSizes(imgData);
-	}
-
-	int realImageRows = image.getRows() - 2 * getAppliedBorders();
-    int realImageCols = image.getColumns() - 2 * getAppliedBorders();
-
-	if(verbose)
-		cout << "* COMPUTING features * " << endl;
-	vector<vector<WindowFeatures>> fs= computeAllFeatures(image.getPixels().data(), imgData);
-	vector<vector<FeatureValues>> formattedFeatures = getAllDirectionsAllFeatureValues(fs);
-	if(verbose)
-		cout << "* Features computed * " << endl;
-
-	// Save result to file
-	if(verbose)
-		cout << "* Saving features to files *" << endl;
-	saveFeaturesToFiles(realImageRows, realImageCols, formattedFeatures);
-
-	// Save feature images
-	if(progArg.createImages)
+	for (const auto& imagePath : Utils::directory_iterator(progArg.imagePath))
 	{
-		if(verbose)
-			cout << "* Creating feature images *" << endl;
-		// Compute how many features will be used for creating the image
-        saveAllFeatureImages(realImageRows, realImageCols, formattedFeatures);
+		// Image from imageLoader
+		Image image = ImageLoader::readImage(imagePath, progArg.borderType,
+			getAppliedBorders(), progArg.quantize,
+			progArg.quantizationMax);
+		auto imgData = ImageData(image, getAppliedBorders());
+		if (verbose)
+			cout << "* Image loaded * ";
+		checkOptionCompatibility(progArg, image);
+		// Print computation info to cout
+		printInfo(imgData, progArg.distance, imagePath);
+		if (verbose) {
+			// Additional info on memory occupation
+			printExtimatedSizes(imgData);
+		}
+
+		int realImageRows = image.getRows() - 2 * getAppliedBorders();
+		int realImageCols = image.getColumns() - 2 * getAppliedBorders();
+
+		if (verbose)
+			cout << "* COMPUTING features * " << endl;
+		std::vector<std::vector<WindowFeatures>> fs = computeAllFeatures(image.getPixels().data(), imgData);
+		std::vector<std::vector<FeatureValues>> formattedFeatures = getAllDirectionsAllFeatureValues(fs);
+		if (verbose)
+			cout << "* Features computed * " << endl;
+
+		// Save result to file
+		//if(verbose)
+		//	cout << "* Saving features to files *" << endl;
+		//saveFeaturesToFiles(realImageRows, realImageCols, formattedFeatures);
+
+		// Save feature images
+		if (progArg.createImages)
+		{
+			if (verbose)
+				cout << "* Creating feature images *" << endl;
+			// Compute how many features will be used for creating the image
+			const auto fileName = Utils::stem(imagePath);
+			saveAllFeatureImages(realImageRows, realImageCols, formattedFeatures, fileName);
+		}
 	}
 	if(verbose)
 		cout << "* DONE * " << endl;
 }
-
-
 
 /**
  * This method re-arranges (i.e., de-linearizes) all the feature values
@@ -168,9 +171,9 @@ vector<vector<vector<double>>> formatOutputResults(const double* featureValues,
  */
 WorkArea generateGlobalWorkArea(int numberOfPairs, int numberOfThreads,
 	double* d_featuresList){
-	
+
 	int totalNumberOfPairs = numberOfPairs * numberOfThreads;
-	
+
 	// Each one of these data structures allows one thread to work
 	GrayPair* d_grayParis;
 	AggregatedGrayPair* d_summedPairs;
@@ -178,15 +181,15 @@ WorkArea generateGlobalWorkArea(int numberOfPairs, int numberOfThreads,
 	AggregatedGrayPair* d_xMarginalPairs;
 	AggregatedGrayPair* d_yMarginalPairs;
 
-	cudaCheckError(cudaMalloc((void**) &d_grayParis, sizeof(GrayPair) * 
+	cudaCheckError(cudaMalloc((void**) &d_grayParis, sizeof(GrayPair) *
 		totalNumberOfPairs));
-	cudaCheckError(cudaMalloc((void**) &d_summedPairs, sizeof(AggregatedGrayPair) * 
+	cudaCheckError(cudaMalloc((void**) &d_summedPairs, sizeof(AggregatedGrayPair) *
 		totalNumberOfPairs));
-	cudaCheckError(cudaMalloc((void**) &d_subtractedPairs, sizeof(AggregatedGrayPair) * 
+	cudaCheckError(cudaMalloc((void**) &d_subtractedPairs, sizeof(AggregatedGrayPair) *
 		totalNumberOfPairs));
-	cudaCheckError(cudaMalloc((void**) &d_xMarginalPairs, sizeof(AggregatedGrayPair) * 
+	cudaCheckError(cudaMalloc((void**) &d_xMarginalPairs, sizeof(AggregatedGrayPair) *
 		totalNumberOfPairs));
-	cudaCheckError(cudaMalloc((void**) &d_yMarginalPairs, sizeof(AggregatedGrayPair) * 
+	cudaCheckError(cudaMalloc((void**) &d_yMarginalPairs, sizeof(AggregatedGrayPair) *
 		totalNumberOfPairs));
 
 	WorkArea wa(numberOfPairs, d_grayParis, d_summedPairs,
@@ -209,7 +212,7 @@ vector<vector<WindowFeatures>> ImageFeatureComputer::computeAllFeatures(unsigned
 		queryGPUData();
 
 	// Create window structure that will be given to threads
-	Window windowData = Window(progArg.windowSize, progArg.distance, 
+	Window windowData = Window(progArg.windowSize, progArg.distance,
 		progArg.directionType, progArg.symmetric);
 
 	// Get dimensions of the original image without borders
@@ -251,17 +254,17 @@ vector<vector<WindowFeatures>> ImageFeatureComputer::computeAllFeatures(unsigned
 	cudaDeviceSetCacheConfig(cudaFuncCachePreferL1);
 
 	// Get Grid and block configuration
-	dim3 Blocks = getBlockConfiguration(); 
+	dim3 Blocks = getBlockConfiguration();
 	dim3 Grid = getGrid(numberOfPairsInWindow, featureSize, realImageRows, realImageCols, verbose);
 
 	int numberOfThreads = Grid.x * Grid.y * Blocks.x * Blocks.y;
 
 	// CPU pre-allocation of the device memory consumed by threads
-	WorkArea globalWorkArea = generateGlobalWorkArea(numberOfPairsInWindow, 
+	WorkArea globalWorkArea = generateGlobalWorkArea(numberOfPairsInWindow,
 		numberOfThreads, d_featuresList);
 
 	// Launching the kernel
-	computeFeatures<<<Grid, Blocks>>>(d_pixels, img, windowData, 
+	computeFeatures<<<Grid, Blocks>>>(d_pixels, img, windowData,
 			globalWorkArea);
 
 	cudaDeviceSynchronize();
@@ -283,7 +286,7 @@ vector<vector<WindowFeatures>> ImageFeatureComputer::computeAllFeatures(unsigned
 	globalWorkArea.release(); // Releasing device work memory
 	cudaFree(d_featuresList); // Releasing Gpu feature array
 	cudaFree(d_pixels); // Releasing the image on the GPU
-	
+
 	return output;
 }
 
@@ -326,18 +329,18 @@ vector<vector<vector<double>>> ImageFeatureComputer::getAllDirectionsAllFeatureV
  * computed for each directions of the image
  * @param imageFeatures
  */
-void ImageFeatureComputer::saveFeaturesToFiles(const int rowNumber, const int colNumber, 
+void ImageFeatureComputer::saveFeaturesToFiles(const int rowNumber, const int colNumber,
 	const vector<vector<FeatureValues>>& imageFeatures)
 {
     int dirType = progArg.directionType;
 
     string outFolder = progArg.outputFolder;
-    Utils::createFolder(outFolder);
+    Utils::create_directories(outFolder);
     string foldersPath[] ={ "/Values0/", "/Values45/", "/Values90/", "/Values135/"};
 
     // Firstly, the folder is created
     string outputDirectionPath = outFolder + foldersPath[dirType -1];
-	Utils::createFolder(outputDirectionPath);
+	Utils::create_directories(outputDirectionPath);
     saveDirectedFeaturesToFiles(rowNumber, colNumber, imageFeatures[0], outputDirectionPath);
 }
 
@@ -375,7 +378,7 @@ void ImageFeatureComputer::saveFeatureToFile(const int rowNumber, const int colN
 	file.open(filePath.append(".txt"));
 	if(file.is_open())
 	{
-		
+
 		int idx = 0;
 
 		for(int i=0; i < rowNumber; i++)
@@ -411,17 +414,13 @@ void ImageFeatureComputer::saveFeatureToFile(const int rowNumber, const int colN
  * @param colNumber: the number of columns of the output image
  * @param imageFeatures
  */
-void ImageFeatureComputer::saveAllFeatureImages(const int rowNumber,
-		const int colNumber, const vector<vector<FeatureValues>>& imageFeatures){
-    int dirType = progArg.directionType;
-
-    string outFolder = progArg.outputFolder;
-    string foldersPath[] ={ "/Images0/", "/Images45/", "/Images90/", "/Images135/"};
-    string outputDirectionPath = outFolder + foldersPath[dirType -1];
-	Utils::createFolder(outputDirectionPath);
+void ImageFeatureComputer::saveAllFeatureImages(int rowsCount,
+		int colsCount, const vector<vector<FeatureValues>>& imageFeatures, std::string fileName)
+{
+	const std::string outputDirectionPath = progArg.outputFolder + "/" + fileName + "/";
+	Utils::create_directories(outputDirectionPath);
     // For each direction computed
-    saveAllFeatureDirectedImages(rowNumber, colNumber, imageFeatures[0],
-                outputDirectionPath);
+    saveAllFeatureDirectedImages(rowsCount, colsCount, imageFeatures[0], outputDirectionPath);
 }
 
 /**

@@ -11,6 +11,8 @@
 #define CUDA_DEV
 #endif
 
+typedef unsigned int uint;
+
 #include "GLCM.h"
 #include "Features.h"
 

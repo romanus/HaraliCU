@@ -1,46 +1,18 @@
-
-#ifndef PRE_CUDA_UTILS_H
-#define PRE_CUDA_UTILS_H
+#pragma once
 
 #include <string>
-#include <iostream>
-#include <cstring>
-#include <algorithm>
-#include <sys/stat.h> // file system interaction
-
+#include <vector>
 
 using namespace std;
 
-// UNIX
-struct MatchPathSeparator
-{
-    bool operator()( char ch ) const
-    {
-        return ch == '/';
-    }
-};
-
 class Utils {
 public:
-    // Interaction with the file system
-    /**
-     * Creates a folder with the specified path/name
-     * @param folderPath
-     */
-    static void createFolder(string folderPath);
-    /**
-     * Removes the path symbols from a file path an returns only its name
-     * @param pathname
-     * @return
-     */
-    static string basename(string const& pathname);
-    /**
-     * Removes the extension from a file name
-     * @param filename
-     * @return
-     */
-    static string removeExtension( std::string const& filename );
+    // std::filesystem::create_directories
+    static void create_directories(std::string folderPath);
+
+    // std::filesystem::path::stem
+    static std::string stem(const std::string& pathname);
+
+    // std::filesystem::directory_iterator
+    static std::vector<std::string> directory_iterator(const std::string& folderPath);
 };
-
-
-#endif //PRE_CUDA_UTILS_H

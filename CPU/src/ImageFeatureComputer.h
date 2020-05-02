@@ -1,7 +1,7 @@
 #ifndef FEATUREEXTRACTOR_IMAGEFEATURECOMPUTER_H
 #define FEATUREEXTRACTOR_IMAGEFEATURECOMPUTER_H
 
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
 #include "ImageLoader.h"
 #include "ProgramArguments.h"

@@ -25,7 +25,7 @@ void ProgramArguments::printProgramUsage(){
 
 /**
  * Function for checking and loading the options provided by the user
- * into the class ProgramArgument 
+ * into the class ProgramArgument
  * @param argc number of provided options
  * @param argv value of the provided options
  * @return class ProgramArguments that stores all the parameters for the GLCM computation
@@ -34,7 +34,7 @@ ProgramArguments ProgramArguments::checkOptions(int argc, char* argv[])
 {
     ProgramArguments progArg;
     int opt;
-    while((opt = getopt(argc, argv, "gsw:d:n:ht:vo:i:q:p:")) != -1){
+    while((opt = getopt(argc, argv, "g:s:w:d:n:h:t:v:o:i:q:p:")) != -1)
     {
         switch (opt){
             case 'p':{
@@ -152,7 +152,7 @@ ProgramArguments ProgramArguments::checkOptions(int argc, char* argv[])
 
     // Option output folder was not used
     if(progArg.outputFolder.empty())
-        progArg.outputFolder = Utils::removeExtension(Utils::basename(progArg.imagePath));
+        progArg.outputFolder = Utils::stem(progArg.imagePath);
 
     return progArg;
 }

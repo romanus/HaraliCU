@@ -17,6 +17,7 @@
 #include "ImageData.h"
 #include "WorkArea.h"
 
+typedef unsigned int uint;
 
 using namespace std;
 

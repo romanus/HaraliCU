@@ -1,5 +1,4 @@
-#ifndef CUDAFUNCTIONS_H_
-#define CUDAFUNCTIONS_H_
+#pragma once
 
 #ifdef __CUDACC__
 #define CUDA_HOSTDEV __host__ __device__
@@ -10,6 +9,8 @@
 #define CUDA_HOST
 #define CUDA_DEV
 #endif
+
+typedef unsigned int uint;
 
 #include <iostream>
 #include <assert.h>
@@ -114,4 +115,3 @@ bool checkEnoughWorkingAreaForThreads(int numberOfPairs, int numberOfThreads,
  */
 __global__ void computeFeatures(unsigned int * pixels, 
 	ImageData img, Window windowData, WorkArea globalWorkArea);
-#endif 

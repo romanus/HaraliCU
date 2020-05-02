@@ -3,11 +3,11 @@
 #define IMG16MAXGRAYLEVEL 65535
 #define IMG8MAXGRAYLEVEL 255
 
-Mat ImageLoader::readImage(string fileName){
-    Mat inputImage;
+Mat ImageLoader::readImage(std::string fileName){
+    cv::Mat inputImage;
     try
     {
-        inputImage = imread(fileName, IMREAD_UNCHANGED);
+        inputImage = cv::imread(fileName, IMREAD_UNCHANGED);
     }
     catch (cv::Exception& e) {
         const char *err_msg = e.what();
@@ -15,14 +15,14 @@ Mat ImageLoader::readImage(string fileName){
     }
     if(! inputImage.data )  // Check for invalid input
     {
-        cout <<  "Could not open or find the image" << std::endl ;
+        cout <<  "Could not open or find the image: " << fileName << std::endl ;
         exit(-1);
     }
     // If the input is not a gray-scale image, it is converted in a color image
     if((inputImage.depth() != CV_8UC1) && (inputImage.depth() != CV_16UC1))
     {
         // Reducing the number of color channels from 3 to 1
-        cvtColor(inputImage, inputImage, CV_RGB2GRAY);
+        cv::cvtColor(inputImage, inputImage, cv::COLOR_RGB2GRAY);
         inputImage.convertTo(inputImage, CV_8UC1);
     }
 
@@ -207,7 +207,7 @@ void ImageLoader::saveImage(const Mat &img, const string &fileName, bool stretch
 
 void ImageLoader::saveImageToFileSystem(const Mat& img, const string& fileName){
     try {
-        imwrite(fileName +".png", img);
+        cv::imwrite(fileName +".png", img);
     }catch (exception& e){
         cout << e.what() << '\n';
         cerr << "Fatal Error! Couldn't save the image";

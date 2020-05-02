@@ -78,7 +78,7 @@ public:
      * @param colNumber: how many columns each image will have
      * @param imageFeatures
      */
-    void saveAllFeatureImages(int rowNumber,  int colNumber, const vector<vector<FeatureValues>>& imageFeatures);
+    void saveAllFeatureImages(int rowsCount, int colsCount, const vector<vector<FeatureValues>>& imageFeatures, std::string fileName);
 
 
 private:
@@ -92,7 +92,7 @@ private:
 	 * in one direction of the image
 	 * @param outputFolderPath
 	 */
-	void saveDirectedFeaturesToFiles(const int rowNumber, const int colNumber, 
+	void saveDirectedFeaturesToFiles(const int rowNumber, const int colNumber,
 		const vector<vector<double>>& imageDirectedFeatures, const string& outputFolderPath);
 	/**
 	 * This method will save into the given folder, all the values for a feature
@@ -124,7 +124,7 @@ private:
 	 * @param outputFilePath: path for the output image
 	 */
 	void saveFeatureImage(int rowNumber,  int colNumber,
-			const vector<double>& featureValues, const string& outputFilePath);
+			const FeatureValues& featureValues, const string& outputFilePath);
 
 	/**
 	 * Utility method
@@ -136,7 +136,7 @@ private:
 	 * @param imgData
 	 * @param padding
 	 */
-    void printInfo(ImageData imgData, int padding);
+    void printInfo(ImageData imgData, int padding, const std::string& filePath);
 	/**
 	 * Displays the memory space used while computing the features
 	 * @param imgData

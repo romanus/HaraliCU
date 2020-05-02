@@ -54,7 +54,7 @@ __device__ void FeatureComputer::computeDirectionalFeatures() {
 
 // ASM
 __device__ inline double computeAsmStep(const double actualPairProbability){
-    return pow((actualPairProbability),2);
+    return actualPairProbability * actualPairProbability;
 }
 
 // AUTOCORRELATION
@@ -78,7 +78,7 @@ __device__ inline double computeHomogeneityStep(const uint i, const uint j, cons
 __device__ inline double computeContrastStep(const uint i, const uint j, const double actualPairProbability){
     int diff = i - j; // avoids casting value errors of uint(negative number)
     diff = diff < 0 ? -diff : diff; // absolute value
-    return (actualPairProbability * (pow(diff, 2)));
+    return (actualPairProbability * (diff * diff));
 }
 
 // DISSIMILARITY
@@ -107,19 +107,21 @@ __device__ inline double computeCorrelationStep(const uint i, const uint j,
 // CLUSTER PROMINENCE
 __device__ inline double computeClusterProminenceStep(const uint i, const uint j,
     const double pairProbability, const double muX, const double muY){
-    return (pow((i + j - muX - muY), 4) * pairProbability);
+        const double step = i + j - muX - muY;
+    return ((step * step) * (step * step)) * pairProbability;
 }
 
 // CLUSTER SHADE
 __device__ inline double computeClusterShadeStep(const uint i, const uint j,
     const double pairProbability, const double muX, const double muY){
-    return (pow((i + j - muX - muY), 3) * pairProbability);
+        const double step = i + j - muX - muY;
+    return (step * step * step) * pairProbability;
 }
 
 // SUM OF SQUARES
 __device__ inline double computeSumOfSquaresStep(const uint i,
                                       const double pairProbability, const double mean){
-    return (pow((i - mean), 2) * pairProbability);
+    return ((i - mean) * (i - mean) * pairProbability);
 }
 
 // SUM Aggregated features
@@ -137,7 +139,7 @@ __device__ inline double computeSumEntropyStep(const double pairProbability){
 __device__ inline double computeSumVarianceStep(const uint aggregatedGrayLevel,
     const double pairProbability, const double sumEntropy){
     // beware ! unsigned int - double
-    return (pow((aggregatedGrayLevel - sumEntropy),2) * pairProbability);
+    return ((aggregatedGrayLevel - sumEntropy)*(aggregatedGrayLevel - sumEntropy)) * pairProbability;
 }
 
 // DIFF Aggregated features
@@ -226,8 +228,8 @@ __device__ void FeatureComputer::extractAutonomousFeatures(const GLCM& glcm, dou
         features[CLUSTERPROMINENCE] += computeClusterProminenceStep(i, j, actualPairProbability, muX, muY);
         features[CLUSTERSHADE] += computeClusterShadeStep(i, j, actualPairProbability, muX, muY);
         features[SUMOFSQUARES] += computeSumOfSquaresStep(i, actualPairProbability, mean);
-        sigmaX += pow((i - muX), 2) * actualPairProbability;
-        sigmaY += pow((j - muY), 2) * actualPairProbability;
+        sigmaX += (i - muX)* (i - muX) * actualPairProbability;
+        sigmaY += (j - muY) * (j - muY) * actualPairProbability;
     }
 
     sigmaX = sqrt(sigmaX);
