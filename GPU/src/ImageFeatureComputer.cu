@@ -89,44 +89,48 @@ void ImageFeatureComputer::compute()
 
 	for (const auto& imagePath : Utils::directory_iterator(progArg.imagePath))
 	{
-		// Image from imageLoader
-		Image image = ImageLoader::readImage(imagePath, progArg.borderType,
-			getAppliedBorders(), progArg.quantize,
-			progArg.quantizationMax);
-		auto imgData = ImageData(image, getAppliedBorders());
-		if (verbose)
-			cout << "* Image loaded * ";
-		checkOptionCompatibility(progArg, image);
-		// Print computation info to cout
-		printInfo(imgData, progArg.distance, imagePath);
-		if (verbose) {
-			// Additional info on memory occupation
-			printExtimatedSizes(imgData);
-		}
-
-		int realImageRows = image.getRows() - 2 * getAppliedBorders();
-		int realImageCols = image.getColumns() - 2 * getAppliedBorders();
-
-		if (verbose)
-			cout << "* COMPUTING features * " << endl;
-		std::vector<std::vector<WindowFeatures>> fs = computeAllFeatures(image.getPixels().data(), imgData);
-		std::vector<std::vector<FeatureValues>> formattedFeatures = getAllDirectionsAllFeatureValues(fs);
-		if (verbose)
-			cout << "* Features computed * " << endl;
-
-		// Save result to file
-		//if(verbose)
-		//	cout << "* Saving features to files *" << endl;
-		//saveFeaturesToFiles(realImageRows, realImageCols, formattedFeatures);
-
-		// Save feature images
-		if (progArg.createImages)
+		for (const short& direction : { 1, 2, 3, 4 }) // 0, 45, 90, 135
 		{
+			progArg.directionType = direction;
+			// Image from imageLoader
+			Image image = ImageLoader::readImage(imagePath, progArg.borderType,
+				getAppliedBorders(), progArg.quantize,
+				progArg.quantizationMax);
+			auto imgData = ImageData(image, getAppliedBorders());
 			if (verbose)
-				cout << "* Creating feature images *" << endl;
-			// Compute how many features will be used for creating the image
-			const auto fileName = Utils::stem(imagePath);
-			saveAllFeatureImages(realImageRows, realImageCols, formattedFeatures, fileName);
+				cout << "* Image loaded * ";
+			checkOptionCompatibility(progArg, image);
+			// Print computation info to cout
+			printInfo(imgData, progArg.distance, imagePath);
+			if (verbose) {
+				// Additional info on memory occupation
+				printExtimatedSizes(imgData);
+			}
+
+			int realImageRows = image.getRows() - 2 * getAppliedBorders();
+			int realImageCols = image.getColumns() - 2 * getAppliedBorders();
+
+			if (verbose)
+				cout << "* COMPUTING features * " << endl;
+			std::vector<std::vector<WindowFeatures>> fs = computeAllFeatures(image.getPixels().data(), imgData);
+			std::vector<std::vector<FeatureValues>> formattedFeatures = getAllDirectionsAllFeatureValues(fs);
+			if (verbose)
+				cout << "* Features computed * " << endl;
+
+			// Save result to file
+			//if(verbose)
+			//	cout << "* Saving features to files *" << endl;
+			//saveFeaturesToFiles(realImageRows, realImageCols, formattedFeatures);
+
+			// Save feature images
+			if (progArg.createImages)
+			{
+				if (verbose)
+					cout << "* Creating feature images *" << endl;
+				// Compute how many features will be used for creating the image
+				const auto fileName = Utils::stem(imagePath) + "_" + std::to_string(45 * (direction - 1));
+				saveAllFeatureImages(realImageRows, realImageCols, formattedFeatures, fileName);
+			}
 		}
 	}
 	if(verbose)

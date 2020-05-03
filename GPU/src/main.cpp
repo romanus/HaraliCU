@@ -37,6 +37,8 @@ int main(int argc, char* argv[])
     cout << "********************************************* HaraliCU *********************************************" << endl << endl;
 
     ProgramArguments pa = ProgramArguments::checkOptions(argc, argv);
+    // pa.imagePath = "C:/Users/trom/Workspace/ML_Forest_Detection/Training_set/BigImgGridGrayscale";
+    // pa.outputFolder = "C:/Users/trom/Workspace/ML_Forest_Detection/Training_set/BigImgGridHFolders";
 
     typedef high_resolution_clock Clock;
     Clock::time_point t1 = high_resolution_clock::now();
